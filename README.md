@@ -150,3 +150,59 @@ helm install workflow-platform ./deploy/helm/platform -f values-production.yaml
 ## License
 
 Proprietary - HSBC Internal Use Only
+
+你正在分析的是一个【已经规范好的代码结构】。
+
+请根据你当前能看到的：
+- 文件夹结构
+- 文件命名方式
+- 代码风格
+- 抽象层级
+- 错误处理方式
+- 依赖边界
+- 注释与文档习惯
+
+执行以下任务（按顺序）：
+
+1. 总结这个项目【隐含的工程规范和设计约定】，而不是常见的通用规范。
+   - 重点关注：作者“刻意在坚持什么”
+   - 忽略偶然出现的例外
+
+2. 抽象出一份【Steering / Coding Rules 文档】：
+   - 用“必须 / 不允许 / 建议”的语气
+   - 每条规则要短、可执行
+   - 假设这份文档是给 AI 和新成员用的
+
+3. 给出这份 Steering 的【适用边界】：
+   - 哪些规则是全局的
+   - 哪些只适用于某些目录或层
+
+4. 输出为 Markdown，结构如下：
+
+# Project Steering
+
+## Architecture Rules
+- 
+
+## Code Style Rules
+- 
+
+## Dependency Rules
+- 
+
+## Error Handling Rules
+- 
+
+## Naming & Structure Rules
+- 
+
+## Things This Project Explicitly Avoids
+- 
+
+不要复述代码，不要解释基础概念，只输出你总结出的规则。
+如果某些规则你无法确定，请明确标注为「推断规则」。
+
+4. 将这份 Steering 改写成【AI Follow Rules】风格：
+   - 假设这是 system-level 指令
+   - 用 "Always / Never / Only if" 开头
+   - 不要解释原因
