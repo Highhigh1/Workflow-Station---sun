@@ -1,161 +1,153 @@
-# Authorization & Access Control Design
+<mxfile host="app.diagrams.net" modified="2026-02-04T00:00:00.000Z" agent="Cursor" version="22.1.3">
+  <diagram id="perm-hierarchy" name="Permission Hierarchy">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="900" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
 
-## 1. Background and Objectives
+        <!-- Top: Unified Auth Provider -->
+        <mxCell id="auth" value="Unified Auth Provider&#10;Admin Center (8092)&#10;/api/v1/admin/auth/*&#10;- login (Admin Gate)&#10;- public-login (All users)&#10;- refresh / me / validate / logout" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="450" y="40" width="520" height="120" as="geometry"/>
+        </mxCell>
 
-This document describes the design of the authorization model used across the platform.
+        <mxCell id="jwt" value="JWT Tokens&#10;accessToken + refreshToken&#10;claims: sub=userId, roles[], permissions[], businessUnitId?, language" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="450" y="190" width="520" height="90" as="geometry"/>
+        </mxCell>
 
-The primary objectives are:
+        <mxCell id="identity" value="Identity Source&#10;projectx.sys_users" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="80" y="190" width="300" height="70" as="geometry"/>
+        </mxCell>
 
-- Prevent direct coupling between users and system roles
-- Separate authorization logic from organizational structure
-- Provide a clear, auditable, and user-friendly permission model
-- Enforce strict data and organizational boundaries
-- Support long-term scalability across multiple Business Units (BUs)
+        <mxCell id="roleCatalog" value="Role Catalog&#10;projectx.sys_roles&#10;type: ADMIN / DEVELOPER / BU_BOUNDED / BU_UNBOUNDED" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1040" y="190" width="320" height="70" as="geometry"/>
+        </mxCell>
 
----
+        <!-- Role assignment sources -->
+        <mxCell id="sources" value="Role Assignment Sources" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="340" y="310" width="740" height="50" as="geometry"/>
+        </mxCell>
 
-## 2. Design Principles
+        <mxCell id="directRoles" value="Direct User Roles&#10;sys_user_roles(user_id, role_id)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="80" y="390" width="380" height="70" as="geometry"/>
+        </mxCell>
 
-The authorization model is based on the following principles:
+        <mxCell id="vgRoles" value="Virtual Group Roles&#10;sys_virtual_group_roles(vg_id, role_id)&#10;+ sys_virtual_group_members(vg_id, user_id)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="510" y="390" width="430" height="90" as="geometry"/>
+        </mxCell>
 
-- Users never receive permissions directly
-- Roles define system capabilities, not user assignments
-- Authorization must be explainable and auditable
-- Organizational boundaries must be enforced consistently
-- Permission evaluation must be deterministic and predictable
+        <mxCell id="buRoles" value="Business Unit (BU) Membership &amp; Roles&#10;sys_user_business_units(user_id, bu_id)&#10;sys_user_business_unit_roles(user_id, bu_id, role_id)&#10;(BU_BOUNDED activation context)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="980" y="390" width="380" height="100" as="geometry"/>
+        </mxCell>
 
----
+        <!-- Effective roles -->
+        <mxCell id="effective" value="Effective Roles (merged)&#10;UserRoleService / query aggregation&#10;输出: roleCodes[]" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="450" y="520" width="520" height="90" as="geometry"/>
+        </mxCell>
 
-## 3. Core Concepts
+        <!-- System gates -->
+        <mxCell id="gates" value="System Role Gates (Frontend AuthGuard)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="340" y="650" width="740" height="50" as="geometry"/>
+        </mxCell>
 
-| Concept | Description |
-|------|-------------|
-| User | An authenticated identity within the system. Users do not directly own roles or permissions. |
-| Visual Group | A user-facing authorization group. Each Visual Group maps to exactly one Role. |
-| Role | A system-defined set of permissions representing a capability. Roles are not user-facing. |
-| Permission | An atomic system operation that can be executed by the platform. |
-| Business Unit (BU) | An organizational boundary defining data scope and role eligibility. |
-| Eligible Role | A governance rule that defines which roles may be used within a BU. |
+        <mxCell id="gateAdmin" value="Admin Center UI&#10;Gate roles: SYS_ADMIN or AUDITOR&#10;Fail → /403" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="80" y="730" width="380" height="90" as="geometry"/>
+        </mxCell>
 
----
+        <mxCell id="gateDev" value="Developer Workstation UI&#10;Gate roles: DEVELOPER or TECH_DIRECTOR&#10;Fail → /no-permission" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="510" y="730" width="430" height="90" as="geometry"/>
+        </mxCell>
 
-## 4. High-Level Authorization Model
+        <mxCell id="gatePortal" value="User Portal UI&#10;No role gate&#10;(any authenticated user)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="980" y="730" width="380" height="90" as="geometry"/>
+        </mxCell>
 
-Authorization follows a strict and linear flow:
+        <!-- Authorization layer -->
+        <mxCell id="authz" value="Authorization / Permissions (runtime checks)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="340" y="850" width="740" height="50" as="geometry"/>
+        </mxCell>
 
-User → Visual Group → Role → Permission
+        <mxCell id="authzAdmin" value="Admin Center&#10;- permissions claim → canAccessRoute()&#10;- backend: planned hard auth (currently permissive)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="80" y="930" width="380" height="90" as="geometry"/>
+        </mxCell>
 
-Business Units apply constraints to this flow but never grant permissions themselves.
+        <mxCell id="authzDev" value="Developer WS&#10;- backend method guard: @RequireDeveloperPermission&#10;- permission source: Admin Center developer-permissions API / token" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="510" y="930" width="430" height="100" as="geometry"/>
+        </mxCell>
 
-- Visual Groups are the only mechanism through which users gain access
-- Roles define what actions are possible
-- Permissions represent executable system operations
-- Business Units restrict where and when permissions are effective
+        <mxCell id="authzPortal" value="User Portal&#10;- business/visibility checks via Admin Center APIs&#10;  (/users/{id}/roles|virtual-groups|business-units ...)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="980" y="930" width="380" height="90" as="geometry"/>
+        </mxCell>
 
----
+        <!-- Edges -->
+        <mxCell id="e1" style="endArrow=block;html=1;strokeColor=#6c8ebf;edgeStyle=orthogonalEdgeStyle;" edge="1" parent="1" source="auth" target="jwt">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
 
-## 5. Authorization Flow Description
+        <mxCell id="e2" style="endArrow=block;html=1;strokeColor=#82b366;edgeStyle=orthogonalEdgeStyle;" edge="1" parent="1" source="identity" target="directRoles">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
 
-1. A User is assigned to one or more Visual Groups
-2. Each Visual Group is associated with exactly one Role
-3. The Role determines the set of Permissions available
-4. The active Business Unit defines:
-   - The data scope accessible to the user
-   - The set of roles that are eligible within that scope
-5. A permission is effective only when all conditions above are satisfied
+        <mxCell id="e3" style="endArrow=block;html=1;strokeColor=#82b366;edgeStyle=orthogonalEdgeStyle;" edge="1" parent="1" source="roleCatalog" target="directRoles">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
 
----
+        <mxCell id="e4" style="endArrow=block;html=1;strokeColor=#82b366;edgeStyle=orthogonalEdgeStyle;" edge="1" parent="1" source="identity" target="vgRoles">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
 
-## 6. Business Unit Responsibility Model
+        <mxCell id="e5" style="endArrow=block;html=1;strokeColor=#82b366;edgeStyle=orthogonalEdgeStyle;" edge="1" parent="1" source="roleCatalog" target="vgRoles">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
 
-Business Units are explicitly **non-authoritative** with respect to permissions.
+        <mxCell id="e6" style="endArrow=block;html=1;strokeColor=#82b366;edgeStyle=orthogonalEdgeStyle;" edge="1" parent="1" source="identity" target="buRoles">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
 
-A Business Unit is responsible for:
+        <mxCell id="e7" style="endArrow=block;html=1;strokeColor=#82b366;edgeStyle=orthogonalEdgeStyle;" edge="1" parent="1" source="roleCatalog" target="buRoles">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
 
-- Defining data access scope (e.g. subtree, region, department)
-- Defining which roles are eligible within that scope
+        <mxCell id="e8" style="endArrow=block;html=1;strokeColor=#b85450;edgeStyle=orthogonalEdgeStyle;" edge="1" parent="1" source="directRoles" target="effective">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
 
-A Business Unit does **not**:
+        <mxCell id="e9" style="endArrow=block;html=1;strokeColor=#b85450;edgeStyle=orthogonalEdgeStyle;" edge="1" parent="1" source="vgRoles" target="effective">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
 
-- Assign roles to users
-- Grant permissions directly
-- Modify role definitions
+        <mxCell id="e10" style="endArrow=block;html=1;strokeColor=#b85450;edgeStyle=orthogonalEdgeStyle;" edge="1" parent="1" source="buRoles" target="effective">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
 
----
+        <mxCell id="e11" style="endArrow=block;html=1;strokeColor=#d6b656;edgeStyle=orthogonalEdgeStyle;" edge="1" parent="1" source="effective" target="jwt">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
 
-## 7. Effective Permission Evaluation
+        <mxCell id="e12" style="endArrow=block;html=1;strokeColor=#6c8ebf;edgeStyle=orthogonalEdgeStyle;" edge="1" parent="1" source="jwt" target="gateAdmin">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
 
-At runtime, permissions are evaluated using the following logic:
+        <mxCell id="e13" style="endArrow=block;html=1;strokeColor=#6c8ebf;edgeStyle=orthogonalEdgeStyle;" edge="1" parent="1" source="jwt" target="gateDev">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
 
-- Collect all Roles derived from the User’s Visual Groups
-- Filter Roles based on the current Business Unit’s eligible roles
-- Resolve Permissions from the remaining Roles
-- Restrict data access according to the Business Unit scope
+        <mxCell id="e14" style="endArrow=block;html=1;strokeColor=#6c8ebf;edgeStyle=orthogonalEdgeStyle;" edge="1" parent="1" source="jwt" target="gatePortal">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
 
-Any failure in this chain results in access denial.
+        <mxCell id="e15" style="endArrow=block;html=1;strokeColor=#d6b656;edgeStyle=orthogonalEdgeStyle;" edge="1" parent="1" source="gateAdmin" target="authzAdmin">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
 
----
+        <mxCell id="e16" style="endArrow=block;html=1;strokeColor=#d6b656;edgeStyle=orthogonalEdgeStyle;" edge="1" parent="1" source="gateDev" target="authzDev">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
 
-## 8. Example Scenario
+        <mxCell id="e17" style="endArrow=block;html=1;strokeColor=#d6b656;edgeStyle=orthogonalEdgeStyle;" edge="1" parent="1" source="gatePortal" target="authzPortal">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
 
-User configuration:
-
-- User: Alice
-- Visual Group: Order Editor
-- Active Business Unit: SG BU
-
-Business Unit configuration:
-
-- Eligible Roles: ORDER_VIEW, ORDER_EDIT
-- Scope: SG BU subtree
-
-Effective result:
-
-- Alice can view and edit orders within the SG BU scope
-- If Alice switches to a different BU where ORDER_EDIT is not eligible, edit permissions are automatically revoked
-- No reassignment of roles or groups is required
-
----
-
-## 9. Security and Governance Benefits
-
-This design provides the following benefits:
-
-- Clear separation between identity, capability, and governance
-- Reduced risk of permission leakage across organizational boundaries
-- Strong alignment between UI representation and actual permissions
-- Predictable authorization behavior
-- Simplified audit and compliance analysis
-
----
-
-## 10. Change Impact Analysis
-
-| Change Type | Impact |
-|-----------|-------|
-| Role modification | Affects all Visual Groups bound to the role |
-| Visual Group membership change | Affects only assigned users |
-| BU eligible role change | Affects only users operating under that BU |
-| BU scope change | Affects data visibility only |
-
-This ensures changes have a controlled and well-understood blast radius.
-
----
-
-## 11. Visualization
-
-The authorization model is visualized using Draw.io diagrams embedded in Confluence, including:
-
-- Business Unit hierarchy
-- Permission flow (User → Visual Group → Role → Permission)
-- Explicit indication of BU scope and role eligibility constraints
-
----
-
-## 12. Summary
-
-Users never receive permissions directly.
-
-Permissions flow through Visual Groups and Roles, while Business Units strictly enforce organizational and data boundaries.
-
-This model ensures security, clarity, and scalability across the platform.
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
